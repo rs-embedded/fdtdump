@@ -1,8 +1,10 @@
 extern crate tempdir;
 
 use std::process::Command;
+use std::env;
+use std::path::PathBuf;
 
-static DTB_PATH: &str = "./tests/test.dtb";
+static DTB_PATH: &str = "test.dtb";
 
 static DTB_DUMP: &str = "/dts-v1/;
 // magic:		0xd00dfeed
@@ -28,9 +30,37 @@ static DTB_DUMP: &str = "/dts-v1/;
 
 #[test]
 fn get_base_coverage() {
-    let target_dir = ::std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| String::from("target"));
-    let mut cmd = Command::new(format!("{}/debug/fdtdump", target_dir));
-    let cmd = cmd.arg(DTB_PATH);
+    // To find the directory where the built binary is, we walk up the directory tree of the test binary until the
+    // parent is "target/".
+    let mut binary_path = env::current_exe().expect("need current binary path to find binary to test");
+    loop {
+        {
+            let parent = binary_path.parent();
+            if parent.is_none() {
+                panic!("Failed to locate binary path from original path: {:?}", env::current_exe());
+            }
+            let parent = parent.unwrap();
+            if parent.is_dir() && parent.file_name().unwrap() == "target" {
+                break;
+            }
+        }
+        binary_path.pop();
+    }
+
+    binary_path.push(
+        if cfg!(target_os = "windows") {
+            format!("{}.exe", env!("CARGO_PKG_NAME"))
+        } else {
+            env!("CARGO_PKG_NAME").to_string()
+        });
+
+    let mut work_dir = PathBuf::new();
+    work_dir.push(env!("CARGO_MANIFEST_DIR"));
+    work_dir.push("tests");
+
+    let mut cmd = Command::new(binary_path);
+    let cmd = cmd.arg(DTB_PATH).current_dir(work_dir);
+
     assert_eq!(
         DTB_DUMP,
         std::str::from_utf8(cmd.output().unwrap().stdout.as_slice()).unwrap()
