@@ -1,0 +1,18 @@
+[package]
+name = "fdtdump"
+version = "0.1.0"
+authors = ["Sean Wilson <spwilson27@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "2.33"
+memmap = "0.7"
+unsafe_unwrap = "0.1.0"
+owning_ref = "0.4"
+
+
+[dependencies.fdt-rs]
+path = "../fdt/"
+#fdt-rs = "0.3"
