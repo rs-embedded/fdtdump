@@ -1,8 +1,8 @@
 extern crate tempdir;
 
-use std::process::Command;
 use std::env;
 use std::path::PathBuf;
+use std::process::Command;
 
 static DTB_PATH: &str = "test.dtb";
 
@@ -32,12 +32,16 @@ static DTB_DUMP: &str = "/dts-v1/;
 fn get_base_coverage() {
     // To find the directory where the built binary is, we walk up the directory tree of the test binary until the
     // parent is "target/".
-    let mut binary_path = env::current_exe().expect("need current binary path to find binary to test");
+    let mut binary_path =
+        env::current_exe().expect("need current binary path to find binary to test");
     loop {
         {
             let parent = binary_path.parent();
             if parent.is_none() {
-                panic!("Failed to locate binary path from original path: {:?}", env::current_exe());
+                panic!(
+                    "Failed to locate binary path from original path: {:?}",
+                    env::current_exe()
+                );
             }
             let parent = parent.unwrap();
             if parent.is_dir() && parent.file_name().unwrap() == "target" {
@@ -47,12 +51,11 @@ fn get_base_coverage() {
         binary_path.pop();
     }
 
-    binary_path.push(
-        if cfg!(target_os = "windows") {
-            format!("{}.exe", env!("CARGO_PKG_NAME"))
-        } else {
-            env!("CARGO_PKG_NAME").to_string()
-        });
+    binary_path.push(if cfg!(target_os = "windows") {
+        format!("{}.exe", env!("CARGO_PKG_NAME"))
+    } else {
+        env!("CARGO_PKG_NAME").to_string()
+    });
 
     let mut work_dir = PathBuf::new();
     work_dir.push(env!("CARGO_MANIFEST_DIR"));
