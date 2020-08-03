@@ -2,19 +2,9 @@ extern crate tempdir;
 
 use std::process::Command;
 
-static DTS: &str = "/dts-v1/;
+static DTB_PATH: &str = "./tests/test.dtb";
 
-/ {
-    prop = \"hello\";
-    other@1 {
-        prop2 = \"\";
-        prop3 = <0x0>;
-        prop4;
-    };
-};
-";
-
-static DTB: &str = "/dts-v1/;
+static DTB_DUMP: &str = "/dts-v1/;
 // magic:		0xd00dfeed
 // totalsize:		0xaf (175)
 // off_dt_struct:	0x38
@@ -36,32 +26,13 @@ static DTB: &str = "/dts-v1/;
 };
 ";
 
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-
 #[test]
 fn get_base_coverage() {
-    let temp_dir = tempdir::TempDir::new("fdtdump-test").unwrap();
-    let dts_path = temp_dir.path().join(Path::new("example.dts"));
-    let dtb_path = temp_dir.path().join(Path::new("example.dtb"));
-
-    let mut file = File::create(&dts_path).unwrap();
-    file.write_all(DTS.as_bytes()).unwrap();
-
-    let output = Command::new("dtc")
-        .arg(dts_path.to_str().unwrap())
-        .output()
-        .unwrap();
-
-    let mut file = File::create(&dtb_path).unwrap();
-    file.write_all(output.stdout.as_slice()).unwrap();
-
     let target_dir = ::std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| String::from("target"));
     let mut cmd = Command::new(format!("{}/debug/fdtdump", target_dir));
-    let cmd = cmd.arg(dtb_path);
+    let cmd = cmd.arg(DTB_PATH);
     assert_eq!(
-        DTB,
+        DTB_DUMP,
         std::str::from_utf8(cmd.output().unwrap().stdout.as_slice()).unwrap()
     );
 }

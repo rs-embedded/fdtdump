@@ -93,6 +93,8 @@ impl<'i, 'dt> FdtDumper {
             } else if prop.propbuf().len() % size_of::<u32>() == 0 {
                 self.dump.push('<');
                 for val in prop.propbuf().chunks_exact(size_of::<u32>()) {
+                    // We use read_unaligned
+                    #[allow(clippy::cast_ptr_alignment)]
                     let v = read_unaligned::<u32>(val.as_ptr() as *const u32);
                     let v = u32::from_be(v);
                     self.dump.push_str(format!("{:#010x} ", v).as_str());
