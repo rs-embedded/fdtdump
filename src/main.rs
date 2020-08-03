@@ -2,7 +2,6 @@ extern crate clap;
 extern crate fdt_rs;
 extern crate memmap;
 extern crate unsafe_unwrap;
-extern crate owning_ref;
 
 use unsafe_unwrap::UnsafeUnwrap;
 
@@ -138,8 +137,8 @@ impl<'i, 'dt> FdtDumper {
         self.dump.push_str(format!("// totalsize:\t\t{:#x} ({})\n", s, s).as_str());
         self.dump.push_str(format!("// off_dt_struct:\t{:#x}\n", fdt.off_dt_struct()).as_str());
         self.dump.push_str(format!("// off_dt_strings:\t{:#x}\n", fdt.off_dt_strings()).as_str());
-        self.dump.push_str(format!("// version:\t\t{:#x}\n", fdt.version()).as_str());
-        self.dump.push_str(format!("// boot_cpuid_phys:\t{:#x}\n", fdt.boot_cpuid_phys()).as_str());
+        self.dump.push_str(format!("// off_mem_rsvmap:\t{:#x}\n", fdt.off_mem_rsvmap()).as_str());
+        self.dump.push_str(format!("// version:\t\t{:}\n", fdt.version()).as_str());
         self.dump.push_str(format!("// last_comp_version:\t{:}\n", fdt.last_comp_version()).as_str());
         self.dump.push_str(format!("// boot_cpuid_phys:\t{:#x}\n", fdt.boot_cpuid_phys()).as_str());
         self.dump.push_str(format!("// size_dt_strings:\t{:#x}\n", fdt.size_dt_strings()).as_str());
@@ -170,12 +169,12 @@ struct FdtDumper {
 fn main() {
     let args = App::new("fdtdump").version("0.1.0")
         .about("A simple dtb decompiler")
-        .arg(Arg::with_name("file").required(true))
+        .arg(Arg::with_name("dtb-file").required(true).help("Path to dtb file"))
         .get_matches();
 
     // Required - unwrap ok
     unsafe {
-        let fname = args.value_of("file").unsafe_unwrap();
+        let fname = args.value_of("dtb-file").unsafe_unwrap();
 
         let file = File::open(fname).expect(format!("Unable to open {}", fname).as_str());
 
