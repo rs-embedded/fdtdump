@@ -3,7 +3,7 @@
 [![crates.io](https://img.shields.io/crates/v/fdtdump)](https://crates.io/crates/fdtdump)
 [![downloads](https://img.shields.io/crates/d/fdtdump.svg)](https://crates.io/crates/fdtdump)
 [![docs.rs](https://docs.rs/fdtdump/badge.svg)](https://docs.rs/fdtdump/)
-[![master](https://github.com/rs-embedded/fdtdump/workflows/Build%20and%20test/badge.svg?branch=master)](https://github.com/rs-embedded/fdtdump/actions)
+[![master](https://github.com/rs-embedded/fdtdump/workflows/Build/badge.svg?branch=master)](https://github.com/rs-embedded/fdtdump/actions)
 [![coveralls.io](https://coveralls.io/repos/github/rs-embedded/fdtdump/badge.svg)](https://coveralls.io/github/rs-embedded/fdtdump)
 
 A rust version of fdtdump - a tool for printing flattened device trees.
