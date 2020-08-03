@@ -19,3 +19,6 @@ unsafe_unwrap = "0.1.0"
 
 [dependencies.fdt-rs]
 version = "0.4"
+
+[dev-dependencies]
+tempdir = "0.3.5"
