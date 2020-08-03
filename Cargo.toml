@@ -18,4 +18,4 @@ memmap = "0.7"
 unsafe_unwrap = "0.1.0"
 
 [dependencies.fdt-rs]
-fdt-rs = "0.4"
+version = "0.4"
