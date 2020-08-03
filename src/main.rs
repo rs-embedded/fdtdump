@@ -10,14 +10,14 @@ use clap::{App, Arg};
 use memmap::MmapOptions;
 
 use std::fs::File;
-use std::slice;
-use std::ptr::read_unaligned;
 use std::mem::size_of;
+use std::ptr::read_unaligned;
+use std::slice;
 
 use fdt_rs::base::iters::StringPropIter;
 use fdt_rs::base::DevTree;
-use fdt_rs::index::{DevTreeIndex, DevTreeIndexNode, DevTreeIndexProp};
 use fdt_rs::error::Result as DevTreeResult;
+use fdt_rs::index::{DevTreeIndex, DevTreeIndexNode, DevTreeIndexProp};
 use fdt_rs::prelude::*;
 
 unsafe fn allocate_index(buf: &[u8]) -> DevTreeResult<(Vec<u8>, DevTreeIndex)> {
@@ -32,7 +32,11 @@ unsafe fn allocate_index(buf: &[u8]) -> DevTreeResult<(Vec<u8>, DevTreeIndex)> {
 fn are_printable_strings(mut prop_iter: StringPropIter) -> bool {
     loop {
         match prop_iter.next() {
-            Ok(Some(s_ref)) => if s_ref.len() == 0 { return false; },
+            Ok(Some(s_ref)) => {
+                if s_ref.is_empty() {
+                    return false;
+                }
+            }
             Ok(None) => return true,
             Err(_) => return false,
         }
@@ -46,18 +50,17 @@ impl<'i, 'dt> FdtDumper {
         }
     }
 
-    fn dump_node_name(&mut self, name: &str)  {
+    fn dump_node_name(&mut self, name: &str) {
         self.push_indent();
         self.dump.push_str(name);
         self.dump.push_str(" {\n");
     }
 
-    fn dump_node(&mut self, node: &DevTreeIndexNode) -> DevTreeResult<()>{
+    fn dump_node(&mut self, node: &DevTreeIndexNode) -> DevTreeResult<()> {
         let mut name = node.name()?;
-        if name.len() == 0 {
+        if name.is_empty() {
             name = "/";
-        }
-        else {
+        } else {
             name = node.name()?;
         }
         self.dump_node_name(name);
@@ -87,19 +90,16 @@ impl<'i, 'dt> FdtDumper {
                 }
                 let _ = self.dump.pop();
                 let _ = self.dump.pop();
-            }
-            else if prop.propbuf().len() % size_of::<u32>() == 0 {
+            } else if prop.propbuf().len() % size_of::<u32>() == 0 {
                 self.dump.push('<');
                 for val in prop.propbuf().chunks_exact(size_of::<u32>()) {
-
                     let v = read_unaligned::<u32>(val.as_ptr() as *const u32);
                     let v = u32::from_be(v);
                     self.dump.push_str(format!("{:#010x} ", v).as_str());
                 }
                 let _ = self.dump.pop(); // Pop off extra space
                 self.dump.push('>');
-            }
-            else {
+            } else {
                 self.dump.push('[');
                 for val in prop.propbuf() {
                     self.dump.push_str(format!("{:02x} ", val).as_str());
@@ -108,7 +108,6 @@ impl<'i, 'dt> FdtDumper {
                 self.dump.push(']');
             }
         }
-
 
         self.dump.push_str(";\n");
         Ok(())
@@ -132,22 +131,32 @@ impl<'i, 'dt> FdtDumper {
     fn dump_metadata(&mut self, index: &DevTreeIndex) {
         let fdt = index.fdt();
         self.dump.push_str("/dts-v1/;\n");
-        self.dump.push_str(format!("// magic:\t\t{:#x}\n", index.fdt().magic()).as_str());
+        self.dump
+            .push_str(format!("// magic:\t\t{:#x}\n", index.fdt().magic()).as_str());
         let s = fdt.totalsize();
-        self.dump.push_str(format!("// totalsize:\t\t{:#x} ({})\n", s, s).as_str());
-        self.dump.push_str(format!("// off_dt_struct:\t{:#x}\n", fdt.off_dt_struct()).as_str());
-        self.dump.push_str(format!("// off_dt_strings:\t{:#x}\n", fdt.off_dt_strings()).as_str());
-        self.dump.push_str(format!("// off_mem_rsvmap:\t{:#x}\n", fdt.off_mem_rsvmap()).as_str());
-        self.dump.push_str(format!("// version:\t\t{:}\n", fdt.version()).as_str());
-        self.dump.push_str(format!("// last_comp_version:\t{:}\n", fdt.last_comp_version()).as_str());
-        self.dump.push_str(format!("// boot_cpuid_phys:\t{:#x}\n", fdt.boot_cpuid_phys()).as_str());
-        self.dump.push_str(format!("// size_dt_strings:\t{:#x}\n", fdt.size_dt_strings()).as_str());
-        self.dump.push_str(format!("// size_dt_struct:\t{:#x}\n", fdt.size_dt_struct()).as_str());
+        self.dump
+            .push_str(format!("// totalsize:\t\t{:#x} ({})\n", s, s).as_str());
+        self.dump
+            .push_str(format!("// off_dt_struct:\t{:#x}\n", fdt.off_dt_struct()).as_str());
+        self.dump
+            .push_str(format!("// off_dt_strings:\t{:#x}\n", fdt.off_dt_strings()).as_str());
+        self.dump
+            .push_str(format!("// off_mem_rsvmap:\t{:#x}\n", fdt.off_mem_rsvmap()).as_str());
+        self.dump
+            .push_str(format!("// version:\t\t{:}\n", fdt.version()).as_str());
+        self.dump
+            .push_str(format!("// last_comp_version:\t{:}\n", fdt.last_comp_version()).as_str());
+        self.dump
+            .push_str(format!("// boot_cpuid_phys:\t{:#x}\n", fdt.boot_cpuid_phys()).as_str());
+        self.dump
+            .push_str(format!("// size_dt_strings:\t{:#x}\n", fdt.size_dt_strings()).as_str());
+        self.dump
+            .push_str(format!("// size_dt_struct:\t{:#x}\n", fdt.size_dt_struct()).as_str());
         self.dump.push('\n');
     }
 
     pub(crate) fn dump_tree(buf: &[u8]) -> DevTreeResult<()> {
-        let (_vec, index) = unsafe {allocate_index(buf)?};
+        let (_vec, index) = unsafe { allocate_index(buf)? };
 
         let mut dumper = FdtDumper {
             dump: String::new(),
@@ -167,19 +176,25 @@ struct FdtDumper {
 }
 
 fn main() {
-    let args = App::new("fdtdump").version("0.1.0")
+    let args = App::new("fdtdump")
+        .version("0.1.0")
         .about("A simple dtb decompiler")
-        .arg(Arg::with_name("dtb-file").required(true).help("Path to dtb file"))
+        .arg(
+            Arg::with_name("dtb-file")
+                .required(true)
+                .help("Path to dtb file"),
+        )
         .get_matches();
 
     // Required - unwrap ok
     unsafe {
         let fname = args.value_of("dtb-file").unsafe_unwrap();
 
-        let file = File::open(fname).expect(format!("Unable to open {}", fname).as_str());
+        let file = File::open(fname).unwrap_or_else(|_| panic!("Unable to open {}", fname));
 
-        let mmap = MmapOptions::new().map(&file)
-            .expect(format!("Unable to map in {}", fname).as_str());
+        let mmap = MmapOptions::new()
+            .map(&file)
+            .unwrap_or_else(|_| panic!("Unable to map in {}", fname));
 
         let slice = slice::from_raw_parts(mmap.as_ptr(), mmap.len());
 
