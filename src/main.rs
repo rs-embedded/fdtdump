@@ -20,13 +20,11 @@ use fdt_rs::error::Result as DevTreeResult;
 use fdt_rs::index::{DevTreeIndex, DevTreeIndexNode, DevTreeIndexProp};
 use fdt_rs::prelude::*;
 
-unsafe fn allocate_index(buf: &[u8]) -> DevTreeResult<(Vec<u8>, DevTreeIndex)> {
+unsafe fn allocate_index(buf: &[u8]) -> DevTreeResult<(DevTree, Vec<u8>)> {
     let devtree = DevTree::new(buf)?;
     let layout = DevTreeIndex::get_layout(&devtree)?;
 
-    let mut vec = vec![0u8; layout.size() + layout.align()];
-    let buf = core::slice::from_raw_parts_mut(vec.as_mut_ptr(), vec.len());
-    Ok((vec, DevTreeIndex::new(devtree, buf)?))
+    Ok((devtree, vec![0u8; layout.size() + layout.align()]))
 }
 
 fn are_printable_strings(mut prop_iter: StringPropIter) -> bool {
@@ -84,7 +82,7 @@ impl<'i, 'dt> FdtDumper {
             if are_printable_strings(prop.iter_str()) {
                 let mut iter = prop.iter_str();
                 while let Some(s) = iter.next()? {
-                    self.dump.push_str("\"");
+                    self.dump.push('\"');
                     self.dump.push_str(s);
                     self.dump.push_str("\", ");
                 }
@@ -158,7 +156,8 @@ impl<'i, 'dt> FdtDumper {
     }
 
     pub(crate) fn dump_tree(buf: &[u8]) -> DevTreeResult<()> {
-        let (_vec, index) = unsafe { allocate_index(buf)? };
+        let (dt, mut v) = unsafe { allocate_index(buf)? };
+        let index = DevTreeIndex::new(dt, &mut v)?;
 
         let mut dumper = FdtDumper {
             dump: String::new(),
