@@ -82,7 +82,7 @@ impl<'i, 'dt> FdtDumper {
             if are_printable_strings(prop.iter_str()) {
                 let mut iter = prop.iter_str();
                 while let Some(s) = iter.next()? {
-                    self.dump.push_str("\"");
+                    self.dump.push('\"');
                     self.dump.push_str(s);
                     self.dump.push_str("\", ");
                 }
