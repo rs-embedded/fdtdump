@@ -155,6 +155,14 @@ impl<'i, 'dt> FdtDumper {
         self.dump
             .push_str(format!("// size_dt_struct:\t{:#x}\n", fdt.size_dt_struct()).as_str());
         self.dump.push('\n');
+
+        for rsv in fdt.reserved_entries() {
+            self.dump
+            .push_str(format!("/memreserve/ {:#x} {:#x};\n", u64::from(rsv.address), u64::from(rsv.size)).as_str());
+        }
+
+        self.dump.push('\n');
+
     }
 
     pub(crate) fn dump_tree(buf: &[u8]) -> DevTreeResult<()> {
