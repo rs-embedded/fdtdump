@@ -1,11 +1,6 @@
 extern crate clap;
 extern crate fdt_rs;
 extern crate memmap;
-extern crate unsafe_unwrap;
-
-use unsafe_unwrap::UnsafeUnwrap;
-
-use clap::{App, Arg};
 
 use memmap::MmapOptions;
 
@@ -43,7 +38,7 @@ fn are_printable_strings(mut prop_iter: StringPropIter) -> bool {
     }
 }
 
-impl<'i, 'dt> FdtDumper {
+impl FdtDumper {
     fn push_indent(&mut self) {
         for _ in 0..self.indent {
             self.dump.push_str("    ");
@@ -84,7 +79,7 @@ impl<'i, 'dt> FdtDumper {
             if are_printable_strings(prop.iter_str()) {
                 let mut iter = prop.iter_str();
                 while let Some(s) = iter.next()? {
-                    self.dump.push_str("\"");
+                    self.dump.push('\"');
                     self.dump.push_str(s);
                     self.dump.push_str("\", ");
                 }
@@ -119,10 +114,10 @@ impl<'i, 'dt> FdtDumper {
         self.dump_node(node)?;
         self.indent += 1;
         for prop in node.props() {
-            let _ = self.dump_property(prop)?;
+            self.dump_property(prop)?;
         }
         for child in node.children() {
-            let _ = self.dump_level(&child)?;
+            self.dump_level(&child)?;
         }
         self.indent -= 1;
         self.push_indent();
@@ -178,28 +173,27 @@ struct FdtDumper {
 }
 
 fn main() {
-    let args = App::new("fdtdump")
+    let args = clap::Command::new("fdtdump")
         .version("0.1.0")
         .about("A simple dtb decompiler")
         .arg(
-            Arg::with_name("dtb-file")
+            clap::Arg::new("dtb-file")
                 .required(true)
                 .help("Path to dtb file"),
         )
         .get_matches();
 
-    // Required - unwrap ok
-    unsafe {
-        let fname = args.value_of("dtb-file").unsafe_unwrap();
+    let fname = args.get_one::<String>("dtb-file").unwrap();
 
-        let file = File::open(fname).unwrap_or_else(|_| panic!("Unable to open {}", fname));
+    let file = File::open(fname).unwrap_or_else(|_| panic!("Unable to open {}", fname));
 
-        let mmap = MmapOptions::new()
+    let mmap = unsafe {
+        MmapOptions::new()
             .map(&file)
-            .unwrap_or_else(|_| panic!("Unable to map in {}", fname));
+            .unwrap_or_else(|_| panic!("Unable to map in {}", fname))
+    };
 
-        let slice = slice::from_raw_parts(mmap.as_ptr(), mmap.len());
+    let slice = unsafe { slice::from_raw_parts(mmap.as_ptr(), mmap.len()) };
 
-        FdtDumper::dump_tree(slice).unwrap();
-    }
+    FdtDumper::dump_tree(slice).unwrap();
 }
