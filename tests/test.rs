@@ -18,6 +18,7 @@ static DTB_DUMP: &str = "/dts-v1/;
 // size_dt_strings:	0x17
 // size_dt_struct:	0x60
 
+
 / {
     prop = \"hello\";
     other@1 {
