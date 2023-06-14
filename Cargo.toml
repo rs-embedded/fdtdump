@@ -13,9 +13,8 @@ keywords = ["Device", "Tree", "DTB",  "FDT"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = "2.33"
+clap = "4.1"
 memmap = "0.7"
-unsafe_unwrap = "0.1.0"
 
 [dependencies.fdt-rs]
 version = "0.4"
